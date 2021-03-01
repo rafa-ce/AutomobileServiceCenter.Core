@@ -12,6 +12,7 @@ using ASC.Web.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ASC.Web.Configuration;
 
 namespace ASC.Web
 {
@@ -33,7 +34,10 @@ namespace ASC.Web
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
-           services.AddRazorPages();
+            services.AddRazorPages();
+
+            services.AddOptions();
+            services.Configure<ApplicationSettings>(Configuration.GetSection("AppSettings"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
