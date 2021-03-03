@@ -79,3 +79,31 @@ footer.page-footer {
         height: 56px;
     }
 }
+
+
+/* Adjusting padding to display Side Nav */
+
+header.secureLayout,
+main.secureLayout,
+footer.secureLayout {
+    padding-left: 300px;
+}
+
+@media only screen and (max-width: 992px) {
+    header.secureLayout,
+    main.secureLayout,
+    footer.secureLayout {
+        padding-left: 0;
+    }
+}
+
+
+/* Selected Menu Item style*/
+
+.side-nav li.active {
+    background-color: #f5f5f5;
+}
+
+.margin-bottom-0px {
+    margin-bottom: 0px;
+}
