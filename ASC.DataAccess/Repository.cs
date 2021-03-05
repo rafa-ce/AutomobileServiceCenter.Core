@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ASC.DataAccess.Interfaces;
 using ASC.Models.BaseTypes;
+using ASC.Utilities;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -20,10 +21,10 @@ namespace ASC.DataAccess
         public Repository(IUnitOfWork scope)
         {
             storageAccount = CloudStorageAccount.Parse(scope.ConnectionString);
-            
+
             tableClient = storageAccount.CreateCloudTableClient();
             CloudTable table = tableClient.GetTableReference(typeof(T).Name);
-            
+
             storageTable = table;
             this.Scope = scope;
         }
@@ -44,6 +45,12 @@ namespace ASC.DataAccess
         {
             CloudTable table = tableClient.GetTableReference(typeof(T).Name);
             await table.CreateIfNotExistsAsync();
+
+            if (typeof(IAuditTracker).IsAssignableFrom(typeof(T)))
+            {
+                var auditTable = tableClient.GetTableReference($"{typeof(T).Name}Audit");
+                await auditTable.CreateIfNotExistsAsync();
+            }
         }
 
         public async Task DeleteAsync(T entity)
@@ -106,17 +113,35 @@ namespace ASC.DataAccess
             var result = await storageTable.ExecuteAsync(operation);
 
             Scope.RollbackActions.Enqueue(rollbackAction);
+
+            // Audit Implementation
+            if (operation.Entity is IAuditTracker)
+            {
+                // Make sure we do not use same RowKey and PartitionKey
+                var auditEntity = ObjectExtension.CopyObject<T>(operation.Entity);
+                auditEntity.PartitionKey = $"{auditEntity.PartitionKey}-{auditEntity.RowKey}";
+                auditEntity.RowKey = $"{DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff")}";
+
+                var auditOperation = TableOperation.Insert(auditEntity);
+                var auditRollbackAction = CreateRollbackAction(auditOperation, true);
+                
+                var auditTable = tableClient.GetTableReference($"{typeof(T).Name}Audit");
+                await auditTable.ExecuteAsync(auditOperation);
+                
+                Scope.RollbackActions.Enqueue(auditRollbackAction);
+            }
+
             return result;
         }
 
         //custom rollback logic
-        private async Task<Action> CreateRollbackAction(TableOperation operation)
+        private async Task<Action> CreateRollbackAction(TableOperation operation, bool IsAuditOperation = false)
         {
             if (operation.OperationType == TableOperationType.Retrieve)
                 return null;
 
             var tableEntity = operation.Entity;
-            var cloudTable = storageTable;
+            var cloudTable = !IsAuditOperation ? storageTable : tableClient.GetTableReference($"{typeof(T).Name}Audit");
             switch (operation.OperationType)
             {
                 case TableOperationType.Insert:
