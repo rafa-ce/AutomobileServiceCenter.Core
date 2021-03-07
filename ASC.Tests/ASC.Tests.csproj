@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ASC.Web\ASC.Web.csproj" />
+    <ProjectReference Include="..\ASC.Utilities\ASC.Utilities.csproj" />
   </ItemGroup>
 
 </Project>
