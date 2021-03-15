@@ -13,6 +13,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ASC.Web.Configuration;
+using ElCamino.AspNetCore.Identity.AzureTable.Model;
+using IdentityUser = ElCamino.AspNetCore.Identity.AzureTable.Model.IdentityUser;
+using ASC.Web.Models;
+using Microsoft.Extensions.Options;
+using IdentityRole = ElCamino.AspNetCore.Identity.AzureTable.Model.IdentityRole;
 
 namespace ASC.Web
 {
@@ -28,11 +33,32 @@ namespace ASC.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(
-                    Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            // Add Elcamino Azure Table Identity services.
+            //services.AddDbContext(options =>
+            //    options.UseSqlServer(
+            //        Configuration.GetConnectionString("DefaultConnection")));
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                // Set whatever identity options here
+                options.SignIn.RequireConfirmedAccount = true;
+                options.User.RequireUniqueEmail = true;
+            })
+            .AddAzureTableStores<ApplicationDbContext>(new Func<IdentityConfiguration>(() =>
+            {
+                IdentityConfiguration idconfig = new IdentityConfiguration();
+                idconfig.TablePrefix = Configuration.GetSection("IdentityAzureTable:IdentityConfiguration:TablePrefix").Value;
+                idconfig.StorageConnectionString = Configuration.GetSection("IdentityAzureTable:IdentityConfiguration:StorageConnectionString").Value;
+                idconfig.LocationMode = Configuration.GetSection("IdentityAzureTable:IdentityConfiguration:LocationMode").Value;
+                //Setting TableNames is optional, default value shown below if not set.
+                idconfig.IndexTableName = Configuration.GetSection("IdentityAzureTable:IdentityConfiguration:IndexTableName").Value; // default: AspNetIndex
+                idconfig.RoleTableName = Configuration.GetSection("IdentityAzureTable:IdentityConfiguration:RoleTableName").Value;   // default: AspNetRoles
+                idconfig.UserTableName = Configuration.GetSection("IdentityAzureTable:IdentityConfiguration:UserTableName").Value;   // default: AspNetUsers
+
+                return idconfig;
+            }))
+            .AddDefaultTokenProviders()
+            .CreateAzureTablesIfNotExists<ApplicationDbContext>(); //can remove after first run;
+
             services.AddControllersWithViews();
             services.AddRazorPages();
 
@@ -41,10 +67,12 @@ namespace ASC.Web
 
             services.AddDistributedMemoryCache();
             services.AddSession();
+
+            services.AddSingleton<IIdentitySeed, IdentitySeed>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env, IIdentitySeed storageSeed)
         {
             if (env.IsDevelopment())
             {
@@ -73,6 +101,18 @@ namespace ASC.Web
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
             });
+
+            //Create a scope to resolve dependencies registered as scoped
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                //Resolve ASP .NET Core Identity with DI help
+                var userManager = (UserManager<ApplicationUser>)scope.ServiceProvider.GetService(typeof(UserManager<ApplicationUser>));
+                var roleManager = (RoleManager<IdentityRole>)scope.ServiceProvider.GetService(typeof(RoleManager<IdentityRole>));
+                var options = (IOptions<ApplicationSettings>)scope.ServiceProvider.GetService(typeof(IOptions<ApplicationSettings>));
+
+                // do you things here
+                await storageSeed.Seed(userManager, roleManager, options);
+            }
         }
     }
 }
