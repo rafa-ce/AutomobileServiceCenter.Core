@@ -47,10 +47,9 @@ namespace ASC.Web.Data
                     EmailConfirmed = true
                 };
                 IdentityResult result = await userManager.CreateAsync(user, options.Value.AdminPassword);
-                // TODO  Microsoft.Azure.Cosmos.Table.StorageException : Not Implemented
-                // await userManager.AddClaimAsync(user, new System.Security.Claims.Claim(
-                //     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", options.Value.AdminEmail));
-                // await userManager.AddClaimAsync(user, new System.Security.Claims.Claim("IsActive", "True"));
+                await userManager.AddClaimAsync(user, new System.Security.Claims.Claim(
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", options.Value.AdminEmail));
+                await userManager.AddClaimAsync(user, new System.Security.Claims.Claim("IsActive", "True"));
 
                 //Add Admin to Admin roles
                 if (result.Succeeded)
