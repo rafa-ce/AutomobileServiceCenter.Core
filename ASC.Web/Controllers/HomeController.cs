@@ -34,12 +34,19 @@ namespace ASC.Web.Controllers
             return View();
         }
 
-        public IActionResult Privacy()
+        public IActionResult About()
         {
+            ViewData["Message"] = "Your application description page.";
             return View();
         }
 
-        public IActionResult Dashboard()
+        public IActionResult Contact()
+        {
+            ViewData["Message"] = "Your contact page.";
+            return View();
+        }
+
+        public IActionResult Privacy()
         {
             return View();
         }
