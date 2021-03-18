@@ -1,5 +1,9 @@
+@using Microsoft.AspNetCore.Http
+@using ASC.Utilities
+@inject IHttpContextAccessor UserHttpContext
 @{
     Layout = "_MasterLayout";
+    var currentUser = UserHttpContext.HttpContext.User.GetCurrentUserDetails();
 }
 <!-- Header -->
 <header class="secureLayout">
@@ -20,8 +24,8 @@
             <div class="user-view">
                 <div class="background blue-grey lighten-1"></div>
                 <a href="#!user"><img class="circle" src="~/images/male.png"></a>
-                <a href="#!name"><span class="white-text name">John Doe</span></a>
-                <a href="#!email"><span class="white-text email">jdandturk@gmail.com</span></a>
+                <a href="#!name"><span class="white-text name">@currentUser.Name</span></a>
+                <a href="#!email"><span class="white-text email">@currentUser.Email</span></a>
             </div>
         </li>
         <li>

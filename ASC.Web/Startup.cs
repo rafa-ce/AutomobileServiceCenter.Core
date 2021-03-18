@@ -18,6 +18,7 @@ using IdentityUser = ElCamino.AspNetCore.Identity.AzureTable.Model.IdentityUser;
 using ASC.Web.Models;
 using Microsoft.Extensions.Options;
 using IdentityRole = ElCamino.AspNetCore.Identity.AzureTable.Model.IdentityRole;
+using Microsoft.AspNetCore.Http;
 
 namespace ASC.Web
 {
@@ -69,6 +70,8 @@ namespace ASC.Web
             services.AddSession();
 
             services.AddSingleton<IIdentitySeed, IdentitySeed>();
+            // Resolve HttpContextAccessor dependency to access HttpContext in views
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
