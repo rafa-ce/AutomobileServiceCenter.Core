@@ -1,4 +1,6 @@
-﻿using ASC.Web.Models;
+﻿using ASC.Utilities;
+using ASC.Web.Models;
+using ASC.Web.Service;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,15 +19,18 @@ namespace ASC.Web.Controllers
         private readonly ILogger<AccountController> _logger;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmailSender _emailSender;
 
         public AccountController(
             ILogger<AccountController> logger,
             SignInManager<ApplicationUser> signInManager,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IEmailSender emailSender)
         {
             _logger = logger;
             _signInManager = signInManager;
             _userManager = userManager;
+            _emailSender = emailSender;
         }
 
         [HttpGet]
@@ -126,6 +131,82 @@ namespace ASC.Web.Controllers
             var userFactors = await _userManager.GetValidTwoFactorProvidersAsync(user);
             var factorOptions = userFactors.Select(purpose => new SelectListItem { Text = purpose, Value = purpose }).ToList();
             return View(new SendCodeViewModel { Providers = factorOptions, ReturnUrl = returnUrl, RememberMe = rememberMe });
+        }
+
+        //
+        // GET: /Account/ResetPassword
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> InitiateResetPassword()
+        {
+            // Find User
+            var userEmail = HttpContext.User.GetCurrentUserDetails().Email;
+            var userName = HttpContext.User.GetCurrentUserDetails().Name;
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            // Generate User code
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new
+            {
+                userId = user.Id,
+                code = code
+            }, protocol: HttpContext.Request.Scheme);
+            // Send Email -> add userName
+            await _emailSender.SendEmailAsync(userEmail, userName, "Reset Password",
+            $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
+            return View("ResetPasswordEmailConfirmation");
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string code = null)
+        {
+            return code == null ? View("Error") : View();
+        }
+
+        //
+        // POST: /Account/ResetPassword
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return RedirectToAction(nameof(AccountController.ResetPasswordConfirmation), "Account");
+            }
+            var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
+            if (result.Succeeded)
+            {
+                if (HttpContext.User.Identity.IsAuthenticated)
+                    await _signInManager.SignOutAsync();
+
+                return RedirectToAction(nameof(AccountController.ResetPasswordConfirmation), "Account");
+            }
+            AddErrors(result);
+            return View();
+        }
+
+        //
+        // GET: /Account/ResetPasswordConfirmation
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
+        }
+
+        private void AddErrors(IdentityResult result)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
         }
 
         private IActionResult RedirectToLocal(string returnUrl)

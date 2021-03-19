@@ -124,3 +124,12 @@ footer.secureLayout {
 .validation-summary-errors {
     color: #FF4081;
 }
+
+/* used by some of the reset password views */
+.margin-top-50px {
+    margin-top: 50px;
+}
+
+.margin-bottom-50px {
+    margin-bottom: 50px;
+}

@@ -50,7 +50,22 @@
         <li><div class="collapsible-header"><i class="material-icons">perm_data_setting</i>Service Requests</div></li>
         <li><div class="collapsible-header"><i class="material-icons">message</i>Service Notifications</div></li>
         <li><div class="collapsible-header"><i class="material-icons">inbox</i>Promotions</div></li>
-        <li><div class="collapsible-header"><i class="material-icons">settings</i>Settings</div></li>
+        <li>
+            <ul class="collapsible collapsible-accordion">
+                <li>
+                    <div class="collapsible-header"><i class="material-icons">settings</i>Settings</div>
+                    <div class="collapsible-body">
+                        <ul>
+                            <li>
+                                <a class="collapsible-header" href="#!" id="ancrResetPassword">
+                                    Reset Password<i class="material-icons">lock_outline</i>
+                                    </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </li>
         <li><div class="collapsible-header" id="ancrLogout"><i class="material-icons">exit_to_app</i>Logout</div></li>
     </ul>
 </header>
@@ -107,11 +122,20 @@
 <form class="hide" method="post" id="logout_form" asp-controller="Account" asp-action="Logout">
     <input type="submit" value="Logout" />
 </form>
+
+<form class="hide" method="post" id="resetPassword_form" asp-controller="Account"
+      asp-action="InitiateResetPassword">
+</form>
+
 @section Scripts{
+    @RenderSection("Scripts", required: false)
     <script type="text/javascript">
         $(function () {
             $('#ancrLogout').click(function () {
                 $('#logout_form').submit();
+            });
+            $('#ancrResetPassword').click(function () {
+                $('#resetPassword_form').submit();
             });
         });
     </script>

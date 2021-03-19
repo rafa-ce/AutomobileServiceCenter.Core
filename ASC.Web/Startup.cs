@@ -19,6 +19,7 @@ using ASC.Web.Models;
 using Microsoft.Extensions.Options;
 using IdentityRole = ElCamino.AspNetCore.Identity.AzureTable.Model.IdentityRole;
 using Microsoft.AspNetCore.Http;
+using ASC.Web.Service;
 
 namespace ASC.Web
 {
@@ -72,6 +73,7 @@ namespace ASC.Web
             services.AddSingleton<IIdentitySeed, IdentitySeed>();
             // Resolve HttpContextAccessor dependency to access HttpContext in views
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddTransient<IEmailSender, AuthMessageSender>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
