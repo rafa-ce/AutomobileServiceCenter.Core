@@ -1,4 +1,7 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@using System.Collections.Generic
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authentication
 @model ASC.Web.Models.AccountViewModels.LoginViewModel
 @inject SignInManager<ApplicationUser> SignInManager
 @{
@@ -42,6 +45,26 @@
                     <a asp-action="ForgotPassword">Forgot your password?</a>
                 </div>
             </form>
+        </div>
+        <div class="col s12 m4 offset-m1">
+            <h5>Login using External Providers.</h5>
+            <div class="divider"></div>
+            @{
+                var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+                if (loginProviders.Count != 0)
+                {
+                    <form asp-controller="Account" asp-action="ExternalLogin" asproute-returnurl="@ViewData["ReturnUrl"]" method="post" class="formhorizontal">
+                        <div>
+                            <p>
+                                @foreach (var provider in loginProviders)
+                                {
+                                    <button type="submit" class="btn btn-default" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                                }
+                            </p>
+                        </div>
+                    </form>
+                }
+            }
         </div>
     </div>
 </div>

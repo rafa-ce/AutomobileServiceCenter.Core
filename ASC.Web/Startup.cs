@@ -70,6 +70,16 @@ namespace ASC.Web
             services.AddDistributedMemoryCache();
             services.AddSession();
 
+            services.AddAuthentication()
+                .AddGoogle(options =>
+                {
+                    IConfigurationSection googleAuthNSection =
+                        Configuration.GetSection("Authentication:Google");
+
+                    options.ClientId = Configuration["Google:Identity:ClientId"];
+                    options.ClientSecret = Configuration["Google:Identity:ClientSecret"];
+                });
+
             services.AddSingleton<IIdentitySeed, IdentitySeed>();
             // Resolve HttpContextAccessor dependency to access HttpContext in views
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
