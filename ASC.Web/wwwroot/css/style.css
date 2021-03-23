@@ -133,3 +133,12 @@ footer.secureLayout {
 .margin-bottom-50px {
     margin-bottom: 50px;
 }
+
+/* */
+.padding-bottom-15px {
+    padding-bottom: 15px !important;
+}
+
+.cursor-hand {
+    cursor: pointer
+} 

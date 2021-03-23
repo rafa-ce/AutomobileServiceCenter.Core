@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using ASC.Models;
 using ASC.Web.Configuration;
 using ASC.Web.Models;
 using Microsoft.AspNetCore.Identity;
@@ -54,7 +55,30 @@ namespace ASC.Web.Data
                 //Add Admin to Admin roles
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(user, "Admin");
+                    await userManager.AddToRoleAsync(user, Roles.Admin.ToString());
+                }
+            }
+
+            // Create a service engineer if he doesn’t exist
+            var engineer = await userManager.FindByEmailAsync(options.Value.EngineerEmail);
+            if (engineer == null)
+            {
+                ApplicationUser user = new ApplicationUser
+                {
+                    UserName = options.Value.EngineerName,
+                    Email = options.Value.EngineerEmail,
+                    EmailConfirmed = true,
+                    LockoutEnabled = false
+                };
+                IdentityResult result = await userManager.CreateAsync(user, options.Value.
+                EngineerPassword);
+                await userManager.AddClaimAsync(user, new System.Security.Claims.Claim(
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", options.Value.EngineerEmail));
+                await userManager.AddClaimAsync(user, new System.Security.Claims.Claim("IsActive", "True"));
+                // Add Service Engineer to Engineer role
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, Roles.Engineer.ToString());
                 }
             }
         }
