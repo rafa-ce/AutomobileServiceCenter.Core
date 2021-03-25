@@ -39,7 +39,11 @@
                     <div class="collapsible-header"><i class="material-icons">supervisor_account</i>User Administration</div>
                     <div class="collapsible-body">
                         <ul>
-                            <li><a href="#!">Customers<i class="material-icons">account_box</i></a></li>
+                            <li>
+                                <a asp-controller="Account" asp-action="Customers">
+                                    Customers<i class="material-icons">account_box</i>
+                                </a>
+                            </li>
                             <li><a href="#!">Deactivate User<i class="material-icons">remove_circle</i></a></li>
                             <li>
                                 <a asp-controller="Account" asp-action="ServiceEngineers">

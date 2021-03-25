@@ -319,8 +319,7 @@ namespace ASC.Web.Controllers
                     return View(serviceEngineer);
                 }
                 // Assign user to Engineer Role
-                var roleResult = await _userManager.AddToRoleAsync(user, Roles.Engineer.
-                ToString());
+                var roleResult = await _userManager.AddToRoleAsync(user, Roles.Engineer.ToString());
                 if (!roleResult.Succeeded)
                 {
                     roleResult.Errors.ToList().ForEach(p => ModelState.AddModelError("",
@@ -420,8 +419,7 @@ namespace ASC.Web.Controllers
                     EmailConfirmed = true
                 };
                 var result = await _userManager.CreateAsync(user);
-                await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim
-                ("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", user.Email));
+                await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", user.Email));
                 await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("IsActive", "True"));
                 if (!result.Succeeded)
                 {
@@ -483,6 +481,45 @@ namespace ASC.Web.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Customers()
+        {
+            var customers = await _userManager.GetUsersInRoleAsync(Roles.User.ToString());
+
+            HttpContext.Session.SetSession("Customers", customers);
+
+            return View(new CustomerViewModel()
+            {
+                Customers = customers?.ToList(),
+                Registration = new CustomerRegistrationViewModel()
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Customers(CustomerViewModel model)
+        {
+            model.Customers = HttpContext.Session.GetSession<List<ApplicationUser>>("Customers");
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Registration.Email);
+
+            // Update claims
+            user = await _userManager.FindByEmailAsync(model.Registration.Email);
+            
+            var userClaims = await _userManager.GetClaimsAsync(user);
+            var isActiveClaim = userClaims.SingleOrDefault(p => p.Type == "IsActive");
+
+            var removeClaimResult = await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(isActiveClaim.Type, isActiveClaim.Value));
+            var addClaimResult = await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim(isActiveClaim.Type, model.Registration.IsActive.ToString()));
+
+            return RedirectToAction("Customers");
+
         }
 
         private void AddErrors(IdentityResult result)
