@@ -257,8 +257,7 @@ namespace ASC.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ServiceEngineers(ServiceEngineerViewModel serviceEngineer)
         {
-            serviceEngineer.ServiceEngineers = HttpContext.Session.GetSession<List<ApplicationUser>>
-            ("ServiceEngineers");
+            serviceEngineer.ServiceEngineers = HttpContext.Session.GetSession<List<ApplicationUser>>("ServiceEngineers");
             if (!ModelState.IsValid)
             {
                 return View(serviceEngineer);
@@ -450,6 +449,39 @@ namespace ASC.Web.Controllers
                 AddErrors(result);
             }
             ViewData["ReturnUrl"] = returnUrl;
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult Profile()
+        {
+            var userName = HttpContext.User.GetCurrentUserDetails().Name;
+
+            return View(new ProfileViewModel() { UserName = userName });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(ProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var email = HttpContext.User.GetCurrentUserDetails().Email;
+            var user = await _userManager.FindByEmailAsync(email);
+            user.UserName = model.UserName;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                await _signInManager.SignOutAsync();
+                await _signInManager.SignInAsync(user, false);
+
+                return RedirectToAction("Profile");
+            }
+
             return View(model);
         }
 
