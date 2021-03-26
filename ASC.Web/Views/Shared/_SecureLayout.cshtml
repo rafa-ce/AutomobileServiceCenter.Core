@@ -1,14 +1,18 @@
+@using Microsoft.AspNetCore.Http
+@using ASC.Utilities
+@inject IHttpContextAccessor UserHttpContext
 @{
     Layout = "_MasterLayout";
+    var currentUser = UserHttpContext.HttpContext.User.GetCurrentUserDetails();
 }
 <!-- Header -->
 <header class="secureLayout">
     <nav class="top-nav blue-grey lighten-1">
         <div class="nav-wrapper row valign-wrapper">
             <div class="col s12 valign-wrapper">
-                <a href="#" data-activates="nav-mobile" class="button-collapse top-nav full 
+                <a href="#" data-activates="nav-mobile" class="button-collapse top-nav full
                     hide-on-large-only white-text">
-                        <i class="material-icons">menu</i>
+                    <i class="material-icons">menu</i>
                 </a>
                 <h5><a class="page-title">Automobile Service Center</a></h5>
             </div>
@@ -20,8 +24,8 @@
             <div class="user-view">
                 <div class="background blue-grey lighten-1"></div>
                 <a href="#!user"><img class="circle" src="~/images/male.png"></a>
-                <a href="#!name"><span class="white-text name">John Doe</span></a>
-                <a href="#!email"><span class="white-text email">jdandturk@gmail.com</span></a>
+                <a href="#!name"><span class="white-text name">@currentUser.Name</span></a>
+                <a href="#!email"><span class="white-text email">@currentUser.Email</span></a>
             </div>
         </li>
         <li>
@@ -35,9 +39,17 @@
                     <div class="collapsible-header"><i class="material-icons">supervisor_account</i>User Administration</div>
                     <div class="collapsible-body">
                         <ul>
-                            <li><a href="#!">Customers<i class="material-icons">account_box</i></a></li>
-                            <li><a href="#!">Provision User<i class="material-icons">person_add</i></a></li>
+                            <li>
+                                <a asp-controller="Account" asp-action="Customers">
+                                    Customers<i class="material-icons">account_box</i>
+                                </a>
+                            </li>
                             <li><a href="#!">Deactivate User<i class="material-icons">remove_circle</i></a></li>
+                            <li>
+                                <a asp-controller="Account" asp-action="ServiceEngineers">
+                                    Provision User<i class="material-icons">person_add</i>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>
@@ -46,8 +58,28 @@
         <li><div class="collapsible-header"><i class="material-icons">perm_data_setting</i>Service Requests</div></li>
         <li><div class="collapsible-header"><i class="material-icons">message</i>Service Notifications</div></li>
         <li><div class="collapsible-header"><i class="material-icons">inbox</i>Promotions</div></li>
-        <li><div class="collapsible-header"><i class="material-icons">settings</i>Settings</div></li>
-        <li><div class="collapsible-header"><i class="material-icons">exit_to_app</i>Logout</div></li>
+        <li>
+            <ul class="collapsible collapsible-accordion">
+                <li>
+                    <div class="collapsible-header"><i class="material-icons">settings</i>Settings</div>
+                    <div class="collapsible-body">
+                        <ul>
+                            <li>
+                                <a asp-controller="Account" asp-action="Profile">
+                                    Profile<i class="material-icons">account_circle</i>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="collapsible-header" href="#!" id="ancrResetPassword">
+                                    Reset Password<i class="material-icons">lock_outline</i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li><div class="collapsible-header" id="ancrLogout"><i class="material-icons">exit_to_app</i>Logout</div></li>
     </ul>
 </header>
 <!-- Render Body -->
@@ -94,7 +126,30 @@
     <div class="footer-copyright row margin-bottom-0px">
         <div class="col s12">
             Powered by <a class="brown-text text-lighten-3" href="http://materializecss.com">
-                Materialize</a>
+                Materialize
+            </a>
         </div>
     </div>
 </footer>
+
+<form class="hide" method="post" id="logout_form" asp-controller="Account" asp-action="Logout">
+    <input type="submit" value="Logout" />
+</form>
+
+<form class="hide" method="post" id="resetPassword_form" asp-controller="Account"
+      asp-action="InitiateResetPassword">
+</form>
+
+@section Scripts{
+    @RenderSection("Scripts", required: false)
+    <script type="text/javascript">
+        $(function () {
+            $('#ancrLogout').click(function () {
+                $('#logout_form').submit();
+            });
+            $('#ancrResetPassword').click(function () {
+                $('#resetPassword_form').submit();
+            });
+        });
+    </script>
+}
