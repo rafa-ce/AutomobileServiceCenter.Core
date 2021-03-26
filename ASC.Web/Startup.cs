@@ -73,11 +73,17 @@ namespace ASC.Web
             services.AddAuthentication()
                 .AddGoogle(options =>
                 {
-                    IConfigurationSection googleAuthNSection =
-                        Configuration.GetSection("Authentication:Google");
+                    IConfigurationSection googleAuthNSection = Configuration.GetSection("Authentication:Google");
 
                     options.ClientId = Configuration["Google:Identity:ClientId"];
                     options.ClientSecret = Configuration["Google:Identity:ClientSecret"];
+                })
+                .AddFacebook(options =>
+                {
+                    IConfigurationSection facebookAuthNSection = Configuration.GetSection("Authentication:Facebook");
+
+                    options.ClientId = Configuration["Facebook:Identity:ClientId"];
+                    options.ClientSecret = Configuration["Facebook:Identity:ClientSecret"];
                 });
 
             services.AddSingleton<IIdentitySeed, IdentitySeed>();
