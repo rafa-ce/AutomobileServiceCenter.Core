@@ -20,6 +20,13 @@ using Microsoft.Extensions.Options;
 using IdentityRole = ElCamino.AspNetCore.Identity.AzureTable.Model.IdentityRole;
 using Microsoft.AspNetCore.Http;
 using ASC.Web.Service;
+using ASC.DataAccess.Interfaces;
+using ASC.DataAccess;
+using System.Reflection;
+using AutoMapper;
+using Newtonsoft.Json.Serialization;
+using ASC.Business.Interfaces;
+using ASC.Business;
 
 namespace ASC.Web
 {
@@ -61,14 +68,36 @@ namespace ASC.Web
             .AddDefaultTokenProviders()
             .CreateAzureTablesIfNotExists<ApplicationDbContext>(); //can remove after first run;
 
-            services.AddControllersWithViews();
-            services.AddRazorPages();
+            //services.AddDistributedMemoryCache();
+            services.AddDistributedRedisCache(options =>
+            {
+                options.Configuration = Configuration.GetSection("CacheSettings:CacheConnectionString").Value;
+                options.InstanceName = Configuration.GetSection("CacheSettings:CacheInstance").Value;
+            });
 
             services.AddOptions();
             services.Configure<ApplicationSettings>(Configuration.GetSection("AppSettings"));
+            
+            services.AddControllersWithViews();
+            services.AddRazorPages();
 
-            services.AddDistributedMemoryCache();
+            // AutoMapper
+            var mappingConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new MappingProfile());
+            });
+
+            IMapper mapper = mappingConfig.CreateMapper();
+            services.AddSingleton(mapper);
+
             services.AddSession();
+
+            services.AddMvc()
+                 .AddJsonOptions(options =>
+                 {
+                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                     options.JsonSerializerOptions.PropertyNamingPolicy = null;
+                 });
 
             services.AddAuthentication()
                 .AddGoogle(options =>
@@ -90,10 +119,18 @@ namespace ASC.Web
             // Resolve HttpContextAccessor dependency to access HttpContext in views
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddScoped<IUnitOfWork>(p => new UnitOfWork(Configuration.GetSection("ConnectionStrings:DefaultConnection").Value));
+            services.AddScoped<IMasterDataOperations, MasterDataOperations>();
+            services.AddTransient<IMasterDataCacheOperations, MasterDataCacheOperations>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env, IIdentitySeed storageSeed)
+        public async void Configure(
+            IApplicationBuilder app, 
+            IWebHostEnvironment env, 
+            IIdentitySeed storageSeed,
+            IMasterDataCacheOperations masterDataCacheOperations,
+            IUnitOfWork unitOfWork)
         {
             if (env.IsDevelopment())
             {
@@ -134,6 +171,17 @@ namespace ASC.Web
                 // do you things here
                 await storageSeed.Seed(userManager, roleManager, options);
             }
+
+            var models = Assembly.Load(new AssemblyName("ASC.Models")).GetTypes().Where(type => type.Namespace == "ASC.Models.Models");
+            foreach (var model in models)
+            {
+                var repositoryInstance = Activator.CreateInstance(typeof(Repository<>).
+                MakeGenericType(model), unitOfWork);
+                MethodInfo method = typeof(Repository<>).MakeGenericType(model).GetMethod("CreateTableAsync");
+                method.Invoke(repositoryInstance, new object[0]);
+            }
+
+            await masterDataCacheOperations.CreateMasterDataCacheAsync();
         }
     }
 }
