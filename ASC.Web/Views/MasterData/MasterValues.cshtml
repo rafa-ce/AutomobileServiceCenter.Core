@@ -15,6 +15,11 @@
             </select>
             <label>Partition Key</label>
         </div>
+        <div class="col s4 offset-s4 padding-bottom-15px right-align">
+            <a class="modal-trigger waves-effect waves-light" href="#modal1">
+                <img src="~/images/excel.png" />
+            </a>
+        </div>
         <div class="col s12 padding-bottom-15px">
             @* Display List of Master Values *@
             <table class="highlight centered" id="tblMasterValues">
@@ -92,9 +97,49 @@
     </div>
 </div>
 
+<!-- Modal Structure -->
+<div id="modal1" class="modal modal-fixed-footer">
+    <div class="modal-content">
+        <h4>Upload Excel</h4>
+        <p>Upload the Excel file that contains all the master values.</p>
+        <!-- Div to display Errors-->
+        <div class="row hide divErrors">
+            <div class="col s12">
+                <div class="card-panel red lighten-1">
+                    <span class="white-text errors"></span>
+                </div>
+            </div>
+        </div>
+        <!-- Div to display progress -->
+        <div class="progress hide">
+            <div class="indeterminate"></div>
+        </div>
+        <form action="UploadExcel" controller="MasterData" method="post">
+            <div class="file-field input-field">
+                <div class="btn">
+                    <span>File</span>
+                    <input type="file" id="files">
+                </div>
+                <div class="file-path-wrapper">
+                    <input class="file-path validate" type="text">
+                </div>
+                <div class="input-field row right">
+                    <button class="btn waves-effect waves-light btnUpload" type="button"
+                            name="action">
+                        Upload
+                        <i class="material-icons right">send</i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 @section Scripts{
     <script>
         $(document).ready(function () {
+            // the "href" attribute of .modal-trigger must specify the modal ID that wants to be triggered
+            $('.modal').modal();
             // Need to pass Verification Token to get Request Validated for Forgery
             var token = $('input[type=hidden][name=__RequestVerificationToken]', document).val();
             $.ajaxSetup({
@@ -228,6 +273,47 @@
                     // Remove valid class for materialize css dropdown, otherwise there is a CSS distortion
                     $('.select-wrapper').removeClass('valid');
                 }
+            });
+
+            // Excel Upload
+            $(document).on('click', '.btnUpload', function () {
+                // Get all files from input file tag
+                var fileUpload = $("#files").get(0);
+                var files = fileUpload.files;
+                var data = new FormData();
+
+                // Process the file create FormData object
+                $.each(files, function (i) {
+                    data.append(files[i].name, files[i]);
+                });
+
+                // Show progress bar
+                $(".progress").removeClass("hide");
+
+                $.ajax({
+                    type: "POST",
+                    url: "/MasterData/UploadExcel",
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (message) {
+                        // Hide Progress bar
+                        $(".progress").addClass("hide");
+
+                        if (message.Success) {
+                            // Reload the page on success
+                            window.location.reload();
+                        }
+
+                        if (message.Error) {
+                            // Show Errors
+                            $(".divErrors").removeClass("hide");
+                            $(".errors").html("");
+                            $(".errors").html(message.Text);
+                        }
+                    },
+                    error: function () { }
+                });
             });
 
             // Excel Upload

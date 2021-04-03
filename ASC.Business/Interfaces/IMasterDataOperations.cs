@@ -17,5 +17,6 @@ namespace ASC.Business.Interfaces
         Task<MasterDataValue> GetMasterValueByNameAsync(string key, string name);
         Task<bool> InsertMasterValueAsync(MasterDataValue value);
         Task<bool> UpdateMasterValueAsync(string originalPartitionKey, string originalRowKey, MasterDataValue value);
+        Task<bool> UploadBulkMasterData(List<MasterDataValue> values);
     }
 }
