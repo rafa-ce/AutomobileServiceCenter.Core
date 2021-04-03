@@ -68,8 +68,16 @@ namespace ASC.Web
             .AddDefaultTokenProviders()
             .CreateAzureTablesIfNotExists<ApplicationDbContext>(); //can remove after first run;
 
-            services.AddScoped<IUnitOfWork>(p => new UnitOfWork(Configuration.GetSection("ConnectionStrings: DefaultConnection").Value));
+            //services.AddDistributedMemoryCache();
+            services.AddDistributedRedisCache(options =>
+            {
+                options.Configuration = Configuration.GetSection("CacheSettings:CacheConnectionString").Value;
+                options.InstanceName = Configuration.GetSection("CacheSettings:CacheInstance").Value;
+            });
 
+            services.AddOptions();
+            services.Configure<ApplicationSettings>(Configuration.GetSection("AppSettings"));
+            
             services.AddControllersWithViews();
             services.AddRazorPages();
 
@@ -82,10 +90,6 @@ namespace ASC.Web
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
 
-            services.AddOptions();
-            services.Configure<ApplicationSettings>(Configuration.GetSection("AppSettings"));
-
-            services.AddDistributedMemoryCache();
             services.AddSession();
 
             services.AddMvc()
@@ -115,10 +119,9 @@ namespace ASC.Web
             // Resolve HttpContextAccessor dependency to access HttpContext in views
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IEmailSender, AuthMessageSender>();
-            
             services.AddScoped<IUnitOfWork>(p => new UnitOfWork(Configuration.GetSection("ConnectionStrings:DefaultConnection").Value));
-            
             services.AddScoped<IMasterDataOperations, MasterDataOperations>();
+            services.AddTransient<IMasterDataCacheOperations, MasterDataCacheOperations>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -126,7 +129,7 @@ namespace ASC.Web
             IApplicationBuilder app, 
             IWebHostEnvironment env, 
             IIdentitySeed storageSeed,
-            //IMasterDataCacheOperations masterDataCacheOperations,
+            IMasterDataCacheOperations masterDataCacheOperations,
             IUnitOfWork unitOfWork)
         {
             if (env.IsDevelopment())
@@ -177,7 +180,8 @@ namespace ASC.Web
                 MethodInfo method = typeof(Repository<>).MakeGenericType(model).GetMethod("CreateTableAsync");
                 method.Invoke(repositoryInstance, new object[0]);
             }
-            //await masterDataCacheOperations.CreateMasterDataCacheAsync();
+
+            await masterDataCacheOperations.CreateMasterDataCacheAsync();
         }
     }
 }
