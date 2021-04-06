@@ -9,5 +9,6 @@ namespace ASC.Business.Interfaces
     {
         Task CreateLogAsync(string category, string message);
         Task CreateExceptionLogAsync(string id, string message, string stacktrace);
+        Task CreateUserActivityAsync(string email, string action);
     }
 }

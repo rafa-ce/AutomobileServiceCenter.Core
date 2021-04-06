@@ -47,5 +47,20 @@ namespace ASC.Business
                 _unitOfWork.CommitTransaction();
             }
         }
+
+        public async Task CreateUserActivityAsync(string email, string action)
+        {
+            using (_unitOfWork)
+            {
+                await _unitOfWork.Repository<UserActivity>().AddAsync(new UserActivity()
+                {
+                    RowKey = Guid.NewGuid().ToString(),
+                    PartitionKey = email,
+                    Action = action
+                });
+             
+                _unitOfWork.CommitTransaction();
+            }
+        }
     }
 }
