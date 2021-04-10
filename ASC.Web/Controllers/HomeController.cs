@@ -12,7 +12,7 @@ using ASC.Utilities;
 
 namespace ASC.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : AnonymousController
     {
         private readonly ILogger<HomeController> _logger;
         private IOptions<ApplicationSettings> _settings;
@@ -51,10 +51,26 @@ namespace ASC.Web.Controllers
             return View();
         }
 
+
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public IActionResult Error(string id)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            if (id == "404")
+            {
+                return View("NotFound");
+            }
+            else if (id == "401")
+            {
+                if (User.Identity.IsAuthenticated)
+                    return View("AccessDenied");
+                else
+                    return RedirectToAction("Login", "Account");
+            }
+            else
+            {
+                return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            }
         }
     }
 }

@@ -24,5 +24,13 @@ namespace ASC.Web.Controllers
         {
             return View();
         }
+
+        public IActionResult TestException()
+        {
+            var i = 0;
+            // Should through Divide by zero error
+            var j = 1 / i;
+            return View();
+        }
     }
 }
