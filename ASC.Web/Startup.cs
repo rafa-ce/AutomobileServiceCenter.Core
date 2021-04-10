@@ -153,6 +153,9 @@ namespace ASC.Web
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
+
             app.UseSession();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
