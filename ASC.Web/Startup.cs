@@ -29,6 +29,7 @@ using ASC.Business.Interfaces;
 using ASC.Business;
 using Microsoft.Extensions.Logging;
 using ASC.Web.Logger;
+using ASC.Web.Filters;
 
 namespace ASC.Web
 {
@@ -94,7 +95,7 @@ namespace ASC.Web
 
             services.AddSession();
 
-            services.AddMvc()
+            services.AddMvc(o => { o.Filters.Add(typeof(CustomExceptionFilter)); })
                  .AddJsonOptions(options =>
                  {
                      options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
@@ -125,6 +126,7 @@ namespace ASC.Web
             services.AddScoped<IMasterDataOperations, MasterDataOperations>();
             services.AddTransient<IMasterDataCacheOperations, MasterDataCacheOperations>();
             services.AddScoped<ILogDataOperations, LogDataOperations>();
+            services.AddScoped<CustomExceptionFilter>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
