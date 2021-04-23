@@ -7,8 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ASC.Web.Controllers
+namespace ASC.Web.Areas.ServiceRequests.Controllers
 {
+    [Area("ServiceRequests")]
     public class DashboardController : Controller
     {
         private readonly ILogger<DashboardController> _logger;

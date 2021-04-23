@@ -1,7 +1,8 @@
 ﻿using ASC.Business.Interfaces;
 using ASC.Models.Models;
 using ASC.Utilities;
-using ASC.Web.Models.MasterDataViewModels;
+using ASC.Web.Areas.Configuration.Models;
+using ASC.Web.Controllers;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,8 +14,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ASC.Web.Controllers
+namespace ASC.Web.Areas.Configuration.Controllers
 {
+    [Area("Configuration")]
     [Authorize(Roles = "Admin")]
     public class MasterDataController : BaseController
     {
