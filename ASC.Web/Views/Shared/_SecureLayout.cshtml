@@ -1,6 +1,8 @@
 @using Microsoft.AspNetCore.Http
 @using ASC.Utilities
+@using ASC.Web.Data
 @inject IHttpContextAccessor UserHttpContext
+@inject INavigationCacheOperations navigationCache
 @{
     Layout = "_MasterLayout";
     var currentUser = UserHttpContext.HttpContext.User.GetCurrentUserDetails();
@@ -28,81 +30,7 @@
                 <a href="#!email"><span class="white-text email">@currentUser.Email</span></a>
             </div>
         </li>
-        <li>
-            <div class="collapsible-header">
-                <i class="material-icons">dashboard</i>Dashboard
-            </div>
-        </li>
-        <li>
-            <ul class="collapsible collapsible-accordion">
-                <li>
-                    <div class="collapsible-header"><i class="material-icons">supervisor_account</i>User Administration</div>
-                    <div class="collapsible-body">
-                        <ul>
-                            <li>
-                                <a asp-controller="Account" asp-action="Customers">
-                                    Customers<i class="material-icons">account_box</i>
-                                </a>
-                            </li>
-                            <li><a href="#!">Deactivate User<i class="material-icons">remove_circle</i></a></li>
-                            <li>
-                                <a asp-controller="Account" asp-action="ServiceEngineers">
-                                    Provision User<i class="material-icons">person_add</i>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
-        </li>
-        <li><div class="collapsible-header"><i class="material-icons">perm_data_setting</i>Service Requests</div></li>
-        <li><div class="collapsible-header"><i class="material-icons">message</i>Service Notifications</div></li>
-        <li><div class="collapsible-header"><i class="material-icons">inbox</i>Promotions</div></li>
-        <li>
-            <ul class="collapsible collapsible-accordion">
-                <li>
-                    <div class="collapsible-header">
-                        <i class="material-icons">perm_data_setting</i>Master Data
-                    </div>
-                    <div class="collapsible-body">
-                        <ul>
-                            <li>
-                                <a asp-controller="MasterData" asp-action="MasterKeys" class="collapsible-header">
-                                    Master Keys<i class="material-icons">data_usage</i>
-                                </a>
-                            </li>
-                            <li>
-                                <a asp-controller="MasterData" asp-action="MasterValues" class="collapsible-header">
-                                    Master Values<i class="material-icons">settings_system_daydream</i>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
-        </li>
-        <li>
-            <ul class="collapsible collapsible-accordion">
-                <li>
-                    <div class="collapsible-header"><i class="material-icons">settings</i>Settings</div>
-                    <div class="collapsible-body">
-                        <ul>
-                            <li>
-                                <a asp-controller="Account" asp-action="Profile">
-                                    Profile<i class="material-icons">account_circle</i>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="collapsible-header" href="#!" id="ancrResetPassword">
-                                    Reset Password<i class="material-icons">lock_outline</i>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
-        </li>
-        <li><div class="collapsible-header" id="ancrLogout"><i class="material-icons">exit_to_app</i>Logout</div></li>
+        @await Component.InvokeAsync("ASC.Utilities.Navigation.LeftNavigation", await navigationCache.GetNavigationCacheAsync())
     </ul>
 </header>
 <!-- Render Body -->
@@ -155,11 +83,11 @@
     </div>
 </footer>
 
-<form class="hide" method="post" id="logout_form" asp-controller="Account" asp-action="Logout">
+<form class="hide" method="post" id="logout_form" asp-area="" asp-controller="Account" asp-action="Logout">
     <input type="submit" value="Logout" />
 </form>
 
-<form class="hide" method="post" id="resetPassword_form" asp-controller="Account"
+<form class="hide" method="post" id="resetPassword_form" asp-area="" asp-controller="Account"
       asp-action="InitiateResetPassword">
 </form>
 

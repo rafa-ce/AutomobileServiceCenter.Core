@@ -4,3 +4,7 @@ bin
 obj
 packages
 .vs
+/ASC.Web/wwwroot/js/libraryBundle.min.js
+/ASC.Web/wwwroot/js/jqueryBundle.min.js
+/ASC.Web/wwwroot/js/appBundle.min.js
+/ASC.Web/wwwroot/css/jquery.dataTable.css

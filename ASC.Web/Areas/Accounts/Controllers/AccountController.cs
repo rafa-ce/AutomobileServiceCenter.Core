@@ -1,9 +1,9 @@
 ﻿using ASC.Models;
 using ASC.Utilities;
 using ASC.Web.Areas.Accounts.Models;
-using ASC.Web.Models;
+using ASC.Web.Controllers;
 using ASC.Web.Models.AccountViewModels;
-using ASC.Web.Service;
+using ASC.Web.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,10 +15,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using ASC.Web.Service;
 
-namespace ASC.Web.Controllers
+namespace ASC.Web.Areas.Accounts.Controllers
 {
-    public class AccountController : Controller
+    [Area("Accounts")]
+    [Authorize]
+    public class AccountController : BaseController
     {
         private readonly ILogger<AccountController> _logger;
         private readonly SignInManager<ApplicationUser> _signInManager;
@@ -512,7 +515,7 @@ namespace ASC.Web.Controllers
 
             // Update claims
             user = await _userManager.FindByEmailAsync(model.Registration.Email);
-            
+
             var userClaims = await _userManager.GetClaimsAsync(user);
             var isActiveClaim = userClaims.SingleOrDefault(p => p.Type == "IsActive");
 
